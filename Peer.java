@@ -149,7 +149,7 @@ class Peer {
      */
     void printNeighbors() {	
 
-	/* to be completed */
+	System.out.println(neighbors.toString());
 
     }// printNeighbors method
 
@@ -262,7 +262,6 @@ class Peer {
 	public void run() {
 
 	    /* to be completed */
-
 	}// run method
 	
 	/* Process the given request received by the TCP client
@@ -283,10 +282,17 @@ class Peer {
 	   peer, return the contents of the file as a byte array.
 	*/
 	byte[] readFile(File file) {
+	    FileInputStream fin = null;
+	    byte[] contents = new byte[(int) file.length()];
+	    try {
+	        fin = new FileInputStream(file);
+	        fin.read(contents);
+	        fin.close();
+        } catch (IOException e) {
+	        System.out.println(e.toString());
+        }
 
-	    /* to be completed */
-
-	    return null;
+	    return contents;
 	}// readFile method
 
 	/* Open the necessary I/O streams and initialize the in and out
@@ -294,16 +300,22 @@ class Peer {
 	*/
 	void openStreams() throws IOException {
 
-	    /* to be completed */
+        in = new DataInputStream(clientSocket.getInputStream());
+        out = new DataOutputStream(clientSocket.getOutputStream());
 
 	}// openStreams method
 
 	/* close all open I/O streams and the client socket
 	 */
 	void close() {
-
-	    /* to be completed */
-
+        try {
+            if (in != null)           { in.close();          }
+            if (out != null)          { out.close();         }
+            if (clientSocket != null) { clientSocket.close();}
+        } catch(IOException e) {
+            System.err.println("Error in close(): " +
+                    e.getMessage());
+        }
 	}// close method
 	
     }// FileTransferThread class
