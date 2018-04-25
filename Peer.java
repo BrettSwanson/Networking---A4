@@ -103,8 +103,9 @@ class Peer {
        peer's neighbors, then terminate the lookup thread
      */
     void processQuitRequest() {
+        DatagramSocket socket;
 
-	/* to be completed */
+    	lThread.terminate();
 
     }// processQuitRequest method
 
@@ -235,7 +236,28 @@ class Peer {
 	 */
 	void process(String request) {
 
-	    /* to be completed */
+	   switch(request) {
+           case "leave":
+               String leaving = "leave";
+               for (int i = 0; i < neighbors.size(); i++) {
+                   try {
+                       int port = neighbors.get(i).port;
+                       String addr = neighbors.get(i).ip;
+                       socket = new DatagramSocket(port);
+                       byte[] buf = leaving.getBytes();
+                       DatagramPacket packet;
+                       InetAddress address = InetAddress.getByAddress(addr
+                               .getBytes());
+                       packet = new DatagramPacket(buf, buf.length, address,
+                               port);
+                       socket.send(packet);
+
+                   } catch (IOException e) {
+                       System.out.println(e.toString());
+                   }
+               }
+                break;
+       }
 
 	}// process method
 
