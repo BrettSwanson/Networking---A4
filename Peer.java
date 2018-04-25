@@ -50,6 +50,8 @@ class Peer {
 	//this.ftPort = nPort;
 	seqNumber = 1;
 	findRequests = new HashSet<>();
+	Neighbor neighbor = new Neighbor(nIP, nPort);
+	neighbors.add(neighbor);
 
     }// constructor
 
@@ -235,8 +237,31 @@ class Peer {
 	   request using the helper method below.
 	*/
 	public void run() {
+	    try {
+	        socket = new DatagramSocket(lPort);
+            byte[] buf;
+            DatagramPacket packet;
+            if (neighbors.size() == 1) {
+                String ip = neighbors.get(0).ip;
+                int port = neighbors.get(0).port;
+                String join = "join " + Peer.this.ip + " " + Peer.this.lPort;
+                buf = join.getBytes();
+                InetAddress addr = InetAddress.getByName(ip);
+                packet = new DatagramPacket(buf, buf.length, addr, port);
+                socket.send(packet);
 
-	    /* to be completed */
+                }
+                while (true) {
+                    buf = new byte[256];
+                    packet = new DatagramPacket(buf, buf.length);
+                    socket.receive(packet);
+                    String request = new String(packet.getData(), "UTF-8");
+                    process(request);
+                }
+
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
 
 	}// run method
 
@@ -248,10 +273,17 @@ class Peer {
 	   own helper method below.
 	 */
 	void process(String request) {
-
+	   String[] message;
+	   message = request.split("\\s");
+	   request = message[0];
 	   switch(request) {
+           case "join":
+                Neighbor neighbor = new Neighbor(message[1], Integer.parseInt
+                        (message[2]));
+                neighbors.add(neighbor);
            case "leave":
-               String leaving = "leave";
+               String leaving = "leave " + Peer.this.ip + " " +
+                       Peer.this.lPort;
                for (int i = 0; i < neighbors.size(); i++) {
                    try {
                        int port = neighbors.get(i).port;
