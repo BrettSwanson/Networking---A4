@@ -63,9 +63,8 @@ class Peer {
      */
     int getChoice() {
 
-	/* to be completed */
-
-	return -1;
+	scanner = new Scanner(System.in);
+	return scanner.nextInt();
     }// getChoice method
         
     /* this is the implementation of the peer's main thread, which
@@ -74,8 +73,29 @@ class Peer {
        is "Quit"
      */
     void run() {
+        boolean quit = false;
+        while (true) {
+            displayMenu();
+            int choice = getChoice();
+            switch (choice) {
+                case 1:
+                    processStatusRequest();
+                    break;
+                case 2:
+                    processFindRequest();
+                    break;
+                case 3:
+                    processGetRequest();
+                case 4:
+                    processQuitRequest();
+                    quit = true;
+                    break;
+            }
+            if (quit) {
+                break;
+            }
+        }
 
-	/* to be completed */
 
     }// run method
 
