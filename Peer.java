@@ -47,11 +47,17 @@ class Peer {
 	this.lPort = lPort;
 	this.filesPath = filesPath;
 	//this.name = name2;
-	//this.ftPort = nPort;
 	seqNumber = 1;
 	findRequests = new HashSet<>();
 	Neighbor neighbor = new Neighbor(nIP, nPort);
 	neighbors.add(neighbor);
+	this.ftPort = this.lPort+1;
+	new GUI();
+	GUI.createAndShowGUI(name);
+	lThread = new LookupThread();
+	lThread.start();
+	ftThread = new FileTransferThread();
+	ftThread.start();
 
     }// constructor
 
@@ -114,11 +120,24 @@ class Peer {
        peer's neighbors, then terminate the lookup thread
      */
     void processQuitRequest() {
-        lThread = new LookupThread();
-        lThread.start();
-        lThread.process("leave");
-        while (lThread.isAlive()) {
+        String leaving = "leave " + Peer.this.ip + " " +
+                Peer.this.lPort;
+        for (int i = 0; i < neighbors.size(); i++) {
+            try {
+                int port = neighbors.get(i).port;
+                String addr = neighbors.get(i).ip;
+                lThread.socket = new DatagramSocket(port);
+                byte[] buf = leaving.getBytes();
+                DatagramPacket packet;
+                InetAddress address = InetAddress.getByAddress(addr
+                        .getBytes());
+                packet = new DatagramPacket(buf, buf.length, address,
+                        port);
+                lThread.socket.send(packet);
 
+            } catch (IOException e) {
+                System.out.println(e.toString());
+            }
         }
         lThread.terminate();
 
@@ -249,13 +268,13 @@ class Peer {
                 InetAddress addr = InetAddress.getByName(ip);
                 packet = new DatagramPacket(buf, buf.length, addr, port);
                 socket.send(packet);
-
                 }
                 while (true) {
                     buf = new byte[256];
                     packet = new DatagramPacket(buf, buf.length);
                     socket.receive(packet);
                     String request = new String(packet.getData(), "UTF-8");
+                    GUI.displayLU(request);
                     process(request);
                 }
 
@@ -282,25 +301,7 @@ class Peer {
                         (message[2]));
                 neighbors.add(neighbor);
            case "leave":
-               String leaving = "leave " + Peer.this.ip + " " +
-                       Peer.this.lPort;
-               for (int i = 0; i < neighbors.size(); i++) {
-                   try {
-                       int port = neighbors.get(i).port;
-                       String addr = neighbors.get(i).ip;
-                       socket = new DatagramSocket(port);
-                       byte[] buf = leaving.getBytes();
-                       DatagramPacket packet;
-                       InetAddress address = InetAddress.getByAddress(addr
-                               .getBytes());
-                       packet = new DatagramPacket(buf, buf.length, address,
-                               port);
-                       socket.send(packet);
 
-                   } catch (IOException e) {
-                       System.out.println(e.toString());
-                   }
-               }
                 break;
        }
 
