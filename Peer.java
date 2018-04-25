@@ -46,7 +46,7 @@ class Peer {
 	this.ip = ip;
 	this.lPort = lPort;
 	this.filesPath = filesPath;
-	//this.name = name2;
+	this.name = name2;
 	seqNumber = 1;
 	findRequests = new HashSet<>();
 	Neighbor neighbor = new Neighbor(nIP, nPort);
@@ -294,15 +294,22 @@ class Peer {
 	void process(String request) {
 	   String[] message;
 	   message = request.split("\\s");
-	   request = message[0];
-	   switch(request) {
+	   String key = message[0];
+	   switch(key) {
            case "join":
                 Neighbor neighbor = new Neighbor(message[1], Integer.parseInt
                         (message[2]));
                 neighbors.add(neighbor);
            case "leave":
-
-                break;
+               break;
+           case "lookup":
+               String lookup = request.substring(7);
+               StringTokenizer token = new StringTokenizer(lookup);
+               processLookup(token);
+               break;
+           case "file":
+               GUI.displayLU(request);
+               break;
        }
 
 	}// process method
