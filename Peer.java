@@ -43,7 +43,13 @@ class Peer {
     Peer(String name2, String ip, int lPort, String filesPath, 
 	 String nIP, int nPort) {
 
-	/* to be completed */
+	this.ip = ip;
+	this.lPort = lPort;
+	this.filesPath = filesPath;
+	//this.name = name2;
+	//this.ftPort = nPort;
+	seqNumber = 1;
+	findRequests = new HashSet<>();
 
     }// constructor
 
@@ -90,6 +96,9 @@ class Peer {
                     processQuitRequest();
                     quit = true;
                     break;
+                default:
+                    System.out.println("Invalid choice");
+                    break;
             }
             if (quit) {
                 break;
@@ -103,9 +112,13 @@ class Peer {
        peer's neighbors, then terminate the lookup thread
      */
     void processQuitRequest() {
-        DatagramSocket socket;
+        lThread = new LookupThread();
+        lThread.start();
+        lThread.process("leave");
+        while (lThread.isAlive()) {
 
-    	lThread.terminate();
+        }
+        lThread.terminate();
 
     }// processQuitRequest method
 
