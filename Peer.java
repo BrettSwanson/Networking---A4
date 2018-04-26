@@ -42,22 +42,23 @@ class Peer {
      */
     Peer(String name2, String ip, int lPort, String filesPath, 
 	 String nIP, int nPort) {
-
-	this.ip = ip;
-	this.lPort = lPort;
-	this.filesPath = filesPath;
-	this.name = name2;
-	seqNumber = 1;
-	findRequests = new HashSet<>();
-	Neighbor neighbor = new Neighbor(nIP, nPort);
-	neighbors.add(neighbor);
-	this.ftPort = this.lPort+1;
-	new GUI();
-	GUI.createAndShowGUI(name);
-	lThread = new LookupThread();
-	lThread.start();
-	ftThread = new FileTransferThread();
-	ftThread.start();
+        this.name = name2;
+        this.ip = ip;
+        this.lPort = lPort;
+        this.filesPath = filesPath;
+        this.name = name2;
+        seqNumber = 1;
+        findRequests = new HashSet<>();
+        Neighbor neighbor = new Neighbor(nIP, nPort);
+        neighbors.add(neighbor);
+        this.ftPort = this.lPort+1;
+        new GUI();
+        GUI.createAndShowGUI(name);
+        lThread = new LookupThread();
+        lThread.start();
+        ftThread = new FileTransferThread();
+        ftThread.start();
+        scanner = new Scanner(System.in);
 
     }// constructor
 
@@ -77,7 +78,7 @@ class Peer {
      */
     int getChoice() {
 
-	scanner = new Scanner(System.in);
+
 	return scanner.nextInt();
     }// getChoice method
         
@@ -120,8 +121,8 @@ class Peer {
        peer's neighbors, then terminate the lookup thread
      */
     void processQuitRequest() {
-        String leaving = "leave " + Peer.this.ip + " " +
-                Peer.this.lPort;
+        String leaving = "leave " + ip + " " +
+                lPort;
         for (int i = 0; i < neighbors.size(); i++) {
             try {
                 int port = neighbors.get(i).port;
@@ -317,7 +318,7 @@ class Peer {
             if (neighbors.size() == 1) {
                 String ip = neighbors.get(0).ip;
                 int port = neighbors.get(0).port;
-                String join = "join " + Peer.this.ip + " " + Peer.this.lPort;
+                String join = "join " + ip + " " + lPort;
                 buf = join.getBytes();
                 InetAddress addr = InetAddress.getByName(ip);
                 packet = new DatagramPacket(buf, buf.length, addr, port);
@@ -386,7 +387,67 @@ class Peer {
 	       as opposed to the "source" peer of the request).
 	 */
 	void processLookup(StringTokenizer line) {
+	    String[] lookList = new String[line.countTokens()];
+	    for (int i = 0; i < lookList.length; i++) {
+            lookList[i] = line.nextToken();
+        }
+        String fileName = lookList[0];
+	    String id = lookList[1];
+	    String fromIP = lookList[2];
+	    String fromPort = lookList[3];
+	    String sourceIP = lookList[4];
+	    String sourcePort = lookList[5];
+        if (!findRequests.contains(id)) {
+	        findRequests.add(id);
+            File folder = new File(filesPath);
+            File[] list = folder.listFiles();
+            boolean found = false;
+            for (int i = 0; i < list.length; i++) {
+                if (list[i].getName().equals(fileName)) {
+                    found = true;
+                }
+            }
+            if (found) {
+                String file = "file " + fileName + " is at " + ip + " " +
+                        lPort + " (tcp port: " + ftPort;
+                byte[] buf = file.getBytes();
+                int port = Integer.parseInt(sourcePort);
+                String address = sourceIP;
+                try {
+                    InetAddress addr = InetAddress.getByName(address);
+                    DatagramPacket packet = new DatagramPacket(buf, buf
+                            .length, addr, port);
+                    socket.send(packet);
+                    Neighbor neighbor = new Neighbor(address, port);
+                    if (!neighbors.contains(neighbor)) {
+                        neighbors.add(neighbor);
+                    }
+                } catch (IOException e) {
+                    System.out.println(e.toString());
+                }
+            }
+            else {
+                String lookup = "lookup " + fileName + " " + id +
+                        " " + ip + " " + lPort + " " + sourceIP + " " +
+                        sourcePort;
+                byte[] buf = lookup.getBytes();
+                for (int i = 0; i < neighbors.size(); i++) {
+                    if (!neighbors.get(i).ip.equals(fromIP)) {
+                        int port = neighbors.get(i).port;
+                        String address = neighbors.get(i).ip;
+                        try {
+                            InetAddress addr = InetAddress.getByName(address);
+                            DatagramPacket packet = new DatagramPacket(buf,
+                                    buf.length, addr, port);
+                            socket.send(packet);
+                        } catch (IOException e) {
+                            System.out.println(e.toString());
+                        }
 
+                    }
+                }
+            }
+        }
 	    /* to be completed */
 
 	}// processLookup method
