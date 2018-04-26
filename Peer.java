@@ -176,8 +176,41 @@ class Peer {
        to handle the Find-request ID properly.
      */
     void processFindRequest() {
+        String line = "==================";
+        System.out.println(line);
+        System.out.print("Name of file to find: ");
+        String file = scanner.nextLine();
+        System.out.println("\n" + line);
+        File folder = new File(filesPath);
+        File[] list = folder.listFiles();
+        boolean found = false;
+        for (int i = 0; i < list.length; i++) {
+            if (list[i].getName().equals(file)) {
+                found = true;
+            }
+        }
+        if (found) {
+            System.out.println("This file exists locally in " + filesPath);
+        }
+        else {
+            String request = "lookup " + file + " " + name + "#" + seqNumber
+                    + " " + ip + " " + lPort + " " + ip + " " + lPort;
+            byte[] buf = request.getBytes();
+            for (int i = 0; i < neighbors.size(); i++) {
+                int port = neighbors.get(i).port;
+                String addr = neighbors.get(i).ip;
+                try {
+                    InetAddress address = InetAddress.getByName(addr);
+                    DatagramPacket packet = new DatagramPacket(buf, buf
+                            .length, address, port);
+                    lThread.socket = new DatagramSocket();
+                    lThread.socket.send(packet);
+                } catch (IOException e) {
+                    System.out.println(e.toString());
+                }
+            }
+        }
 
-	/* to be completed */
 
     }// processFindRequest method
 
