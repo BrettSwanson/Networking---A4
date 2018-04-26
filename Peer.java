@@ -42,8 +42,8 @@ class Peer {
      */
     Peer(String name2, String ip, int lPort, String filesPath, 
 	 String nIP, int nPort) {
+        this.ip = A4.convertNameToIP(ip);
         this.name = name2;
-        this.ip = ip;
         this.lPort = lPort;
         this.filesPath = filesPath;
         this.name = name2;
@@ -162,11 +162,7 @@ class Peer {
         for (int i = 0; i < list.length; i++) {
             System.out.println("    " + list[i].getName());
         }
-        System.out.println("Neighbors:");
-	    for (int i = 0; i < neighbors.size(); i++) {
-	        System.out.println("    " + neighbors.get(i).toString());
-        }
-        System.out.println("==================");
+        printNeighbors();
 
     }// processStatusRequest method
 
@@ -183,7 +179,7 @@ class Peer {
         String line = "==================";
         System.out.println(line);
         System.out.print("Name of file to find: ");
-        String file = scanner.nextLine();
+        String file = scanner.next();
         System.out.println("\n" + line);
         File folder = new File(filesPath);
         File[] list = folder.listFiles();
@@ -207,8 +203,8 @@ class Peer {
                     InetAddress address = InetAddress.getByName(addr);
                     DatagramPacket packet = new DatagramPacket(buf, buf
                             .length, address, port);
-                    lThread.socket = new DatagramSocket();
-                    lThread.socket.send(packet);
+                    DatagramSocket socket = new DatagramSocket();
+                    socket.send(packet);
                 } catch (IOException e) {
                     System.out.println(e.toString());
                 }
@@ -260,9 +256,13 @@ class Peer {
        neighbors. The EXACT format of this method's output is specified by
        example in the assignment handout.
      */
-    void printNeighbors() {	
+    void printNeighbors() {
 
-	System.out.println(neighbors.toString());
+        System.out.println("Neighbors:");
+        for (int i = 0; i < neighbors.size(); i++) {
+            System.out.println("    " + neighbors.get(i).toString());
+        }
+        System.out.println("==================");
 
     }// printNeighbors method
 
@@ -356,7 +356,7 @@ class Peer {
 	   switch(key) {
            case "join":
                 Neighbor neighbor = new Neighbor(message[1], Integer.parseInt
-                        (message[2]));
+                        (message[2].trim()));
                 neighbors.add(neighbor);
            case "leave":
                break;
@@ -366,7 +366,6 @@ class Peer {
                processLookup(token);
                break;
            case "file":
-               GUI.displayLU(request);
                break;
        }
 
@@ -412,9 +411,9 @@ class Peer {
             }
             if (found) {
                 String file = "file " + fileName + " is at " + ip + " " +
-                        lPort + " (tcp port: " + ftPort;
+                        lPort + " (tcp port: " + ftPort + ")";
                 byte[] buf = file.getBytes();
-                int port = Integer.parseInt(sourcePort);
+                int port = Integer.parseInt(sourcePort.trim());
                 String address = sourceIP;
                 try {
                     InetAddress addr = InetAddress.getByName(address);
@@ -435,7 +434,9 @@ class Peer {
                         sourcePort;
                 byte[] buf = lookup.getBytes();
                 for (int i = 0; i < neighbors.size(); i++) {
-                    if (!neighbors.get(i).ip.equals(fromIP)) {
+                    if (!(neighbors.get(i).ip.equals(fromIP) && neighbors
+                            .get(i).port == Integer.parseInt(fromPort.trim())
+                    )) {
                         int port = neighbors.get(i).port;
                         String address = neighbors.get(i).ip;
                         try {
@@ -451,7 +452,6 @@ class Peer {
                 }
             }
         }
-	    /* to be completed */
 
 	}// processLookup method
 
