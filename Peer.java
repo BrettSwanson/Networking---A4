@@ -129,8 +129,8 @@ class Peer {
                 lThread.socket = new DatagramSocket(port);
                 byte[] buf = leaving.getBytes();
                 DatagramPacket packet;
-                InetAddress address = InetAddress.getByAddress(addr
-                        .getBytes());
+                InetAddress address = InetAddress.getByAddress(
+                        addr.getBytes());
                 packet = new DatagramPacket(buf, buf.length, address,
                         port);
                 lThread.socket.send(packet);
@@ -151,8 +151,18 @@ class Peer {
        handout.
      */
     void processStatusRequest() {
-
-	/* to be completed */
+        File folder = new File(filesPath);
+        File[] list = folder.listFiles();
+        System.out.println("==================");
+        System.out.println("Local files:");
+        for (int i = 0; i < list.length; i++) {
+            System.out.println("    " + list[i].getName());
+        }
+        System.out.println("Neighbors:");
+	    for (int i = 0; i < neighbors.size(); i++) {
+	        System.out.println("    " + neighbors.get(i).toString());
+        }
+        System.out.println("==================");
 
     }// processStatusRequest method
 
