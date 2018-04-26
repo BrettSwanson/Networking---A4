@@ -237,7 +237,18 @@ class Peer {
      */
     void writeFile(String fileName, String contents) {
 
-	/* to be completed */
+        FileOutputStream outputStream;
+        File file;
+        try {
+            file = new File(filesPath, fileName);
+            outputStream = new FileOutputStream(file);
+            byte[] buf = contents.getBytes();
+            outputStream.write(buf);
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
 
     }// writeFile method
 
