@@ -49,8 +49,11 @@ class Peer {
         this.name = name2;
         seqNumber = 1;
         findRequests = new HashSet<>();
-        Neighbor neighbor = new Neighbor(nIP, nPort);
-        neighbors.add(neighbor);
+        neighbors = new ArrayList<>();
+        if (!(nIP.equals("") && nPort == 0)) {
+            Neighbor neighbor = new Neighbor(nIP, nPort);
+            neighbors.add(neighbor);
+        }
         this.ftPort = this.lPort+1;
         new GUI();
         GUI.createAndShowGUI(name);
