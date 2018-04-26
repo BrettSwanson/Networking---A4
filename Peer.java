@@ -49,11 +49,8 @@ class Peer {
         this.name = name2;
         seqNumber = 1;
         findRequests = new HashSet<>();
-        if (nIP == null) {
-
-        }
         neighbors = new ArrayList<>();
-        if (!(nIP == null && nPort == 0)) {
+        if (!(nIP == null && nPort == -1)) {
             Neighbor neighbor = new Neighbor(nIP, nPort);
             neighbors.add(neighbor);
         }
