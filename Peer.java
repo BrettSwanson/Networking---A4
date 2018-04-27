@@ -372,7 +372,7 @@ class Peer {
                     packet = new DatagramPacket(buf, buf.length);
                     socket.receive(packet);
                     String request = new String(packet.getData(), "UTF-8");
-                    GUI.displayLU(request);
+                    GUI.displayLU("Received:    " + request);
                     process(request);
                 }
 
@@ -460,6 +460,7 @@ class Peer {
                     DatagramPacket packet = new DatagramPacket(buf, buf
                             .length, addr, port);
                     socket.send(packet);
+                    GUI.displayLU("Sent:    " + file);
                     Neighbor neighbor = new Neighbor(address, port);
                     if (!neighbors.contains(neighbor)) {
                         neighbors.add(neighbor);
@@ -469,6 +470,7 @@ class Peer {
                 }
             }
             else {
+                System.out.println("File is NOT available at this peer");
                 String lookup = "lookup " + fileName + " " + id +
                         " " + ip + " " + lPort + " " + sourceIP + " " +
                         sourcePort;
@@ -479,11 +481,14 @@ class Peer {
                     )) {
                         int port = neighbors.get(i).port;
                         String address = neighbors.get(i).ip;
+                        System.out.println("    Forward request to " +
+                                address + ":" + port);
                         try {
                             InetAddress addr = InetAddress.getByName(address);
                             DatagramPacket packet = new DatagramPacket(buf,
                                     buf.length, addr, port);
                             socket.send(packet);
+                            GUI.displayLU("Sent:    " + lookup);
                         } catch (IOException e) {
                             System.out.println(e.toString());
                         }
@@ -491,6 +496,9 @@ class Peer {
                     }
                 }
             }
+        }
+        else {
+            System.out.println("    Saw request before: no forwarding");
         }
 
 	}// processLookup method
