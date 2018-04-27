@@ -243,12 +243,15 @@ class Peer {
        handout.
      */
     void processGetRequest() {
-
+        String equalsLine = "==================";
+        String dashedLine = "- - - - - - - - - - - - - -";
+        System.out.println(equalsLine);
 	    System.out.print("Name of file to get: ");
 	    String name = scanner.next();
 	    System.out.print("\nAddress of source peer: ");
 	    String address = scanner.next().trim();
 	    System.out.print("\nPort of source peer: ");
+
 	    int port = scanner.nextInt();
 	    try {
             Socket socket = new Socket(address, port);
@@ -261,7 +264,10 @@ class Peer {
             in.close();
             out.close();
             if (!reply.equals("fileNotFound")) {
+                System.out.println(dashedLine);
                 writeFile(name, reply.substring(10));
+                System.out.println(dashedLine);
+                System.out.println(equalsLine);
             } else {
                 System.out.println("The file '" + name + "' is not available " +
                         "at " + address + ":" + port);
@@ -276,7 +282,7 @@ class Peer {
        name and contents are given as arguments.
      */
     void writeFile(String fileName, String contents) {
-
+        System.out.println(fileName +":\n" + contents);
         FileOutputStream outputStream;
         File file;
         try {
@@ -546,7 +552,7 @@ class Peer {
 	   message.
 	 */
 	void process(String request) { 
-
+        System.out.println("Received: " + request);
 	    String fileName = request.split("\\s")[1];
 
         File folder = new File(filesPath);
@@ -562,9 +568,11 @@ class Peer {
                 byte[] buf = readFile(file);
                 reply = "fileFound " + new String(buf, "UTF-8");
                 out.writeUTF(reply);
+                System.out.println("    Sent back file contents");
             } else {
                 reply = "fileNotFound";
                 out.writeUTF(reply);
+                System.out.println("    responded: fileNotFound");
             }
         } catch (IOException e) {
             System.out.println(e.toString());
