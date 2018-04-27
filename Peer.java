@@ -80,9 +80,28 @@ class Peer {
     /* input the next command chosen by the user
      */
     int getChoice() {
-
-
-	return scanner.nextInt();
+        displayMenu();
+        String choice = scanner.next();
+        switch (choice) {
+            case "s":
+            case "S":
+            case "1":
+                return 1;
+            case "f":
+            case "F":
+            case "2":
+                return 2;
+            case "g":
+            case "G":
+            case "3":
+                return 3;
+            case "q":
+            case "Q":
+            case "4":
+                return 4;
+            default:
+                return getChoice();
+        }
     }// getChoice method
         
     /* this is the implementation of the peer's main thread, which
@@ -93,7 +112,6 @@ class Peer {
     void run() {
         boolean quit = false;
         while (true) {
-            displayMenu();
             int choice = getChoice();
             switch (choice) {
                 case 1:
@@ -104,12 +122,10 @@ class Peer {
                     break;
                 case 3:
                     processGetRequest();
+                    break;
                 case 4:
                     processQuitRequest();
                     quit = true;
-                    break;
-                default:
-                    System.out.println("Invalid choice");
                     break;
             }
             if (quit) {
@@ -228,7 +244,31 @@ class Peer {
      */
     void processGetRequest() {
 
-	/* to be completed */
+	    System.out.print("Name of file to get: ");
+	    String name = scanner.next();
+	    System.out.print("\nAddress of source peer: ");
+	    String address = scanner.next().trim();
+	    System.out.print("\nPort of source peer: ");
+	    int port = scanner.nextInt();
+	    try {
+            Socket socket = new Socket(address, port);
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream
+                    ());
+            out.writeUTF("get " + name);
+            String reply = in.readUTF();
+            socket.close();
+            in.close();
+            out.close();
+            if (!reply.equals("fileNotFound")) {
+                writeFile(name, reply.substring(10));
+            } else {
+                System.out.println("The file '" + name + "' is not available " +
+                        "at " + address + ":" + port);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getStackTrace().toString());
+        }
 
     }// processGetRequest method
 
@@ -473,8 +513,20 @@ class Peer {
 	   it using the helper method below (and is finally closed).
 	*/	
 	public void run() {
+        try {
+            serverSocket = new ServerSocket(ftPort);
+            while (true) {
+                clientSocket = serverSocket.accept();
+                openStreams();
+                String request = in.readUTF();
+                process(request);
+                close();
+            }
 
-	    /* to be completed */
+
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
 	}// run method
 	
 	/* Process the given request received by the TCP client
@@ -486,8 +538,29 @@ class Peer {
 	   message.
 	 */
 	void process(String request) { 
-	    
-	    /* to be completed */
+
+	    String fileName = request.split("\\s")[1];
+
+        File folder = new File(filesPath);
+        File[] list = folder.listFiles();
+        File file = null;
+        for (int i = 0; i < list.length; i++) {
+            if (list[i].getName().equals(fileName)) {
+                file = list[i];
+            }
+        }
+	    try {
+            if (file != null) {
+                byte[] buf = readFile(file);
+                reply = "fileFound " + new String(buf, "UTF-8");
+                out.writeUTF(reply);
+            } else {
+                reply = "fileNotFound";
+                out.writeUTF(reply);
+            }
+        } catch (IOException e) {
+            System.out.println(e.toString());
+        }
 
 	}// process method
 
@@ -495,7 +568,7 @@ class Peer {
 	   peer, return the contents of the file as a byte array.
 	*/
 	byte[] readFile(File file) {
-	    FileInputStream fin = null;
+	    FileInputStream fin;
 	    byte[] contents = new byte[(int) file.length()];
 	    try {
 	        fin = new FileInputStream(file);
