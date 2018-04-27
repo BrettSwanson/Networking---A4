@@ -142,22 +142,22 @@ class Peer {
     void processQuitRequest() {
         String leaving = "leave " + ip + " " +
                 lPort;
-        for (int i = 0; i < neighbors.size(); i++) {
-            try {
-                int port = neighbors.get(i).port;
-                String addr = neighbors.get(i).ip;
-                lThread.socket = new DatagramSocket(port);
-                byte[] buf = leaving.getBytes();
-                DatagramPacket packet;
-                InetAddress address = InetAddress.getByAddress(
-                        addr.getBytes());
-                packet = new DatagramPacket(buf, buf.length, address,
-                        port);
-                lThread.socket.send(packet);
+        try {
+        DatagramSocket socket = new DatagramSocket(lPort);
+            for (int i = 0; i < neighbors.size(); i++) {
+                    int port = neighbors.get(i).port;
+                    String addr = neighbors.get(i).ip;
+                    byte[] buf = leaving.getBytes();
+                    DatagramPacket packet;
+                    InetAddress address = InetAddress.getByAddress(
+                            addr.getBytes());
+                    packet = new DatagramPacket(buf, buf.length, address,
+                            port);
+                    socket.send(packet);
 
-            } catch (IOException e) {
-                System.out.println(e.toString());
             }
+        } catch (IOException e) {
+                System.out.println(e.toString());
         }
         lThread.terminate();
 
@@ -196,7 +196,7 @@ class Peer {
         System.out.println(line);
         System.out.print("Name of file to find: ");
         String file = scanner.next();
-        System.out.println("\n" + line);
+        System.out.println(line);
         File folder = new File(filesPath);
         File[] list = folder.listFiles();
         boolean found = false;
@@ -206,11 +206,13 @@ class Peer {
             }
         }
         if (found) {
-            System.out.println("This file exists locally in " + filesPath);
+            System.out.println("This file exists locally in " + filesPath +
+                    "/");
         }
         else {
             String request = "lookup " + file + " " + name + "#" + seqNumber
                     + " " + ip + " " + lPort + " " + ip + " " + lPort;
+            seqNumber++;
             byte[] buf = request.getBytes();
             for (int i = 0; i < neighbors.size(); i++) {
                 int port = neighbors.get(i).port;
@@ -226,6 +228,8 @@ class Peer {
                 }
             }
         }
+
+
 
 
     }// processFindRequest method
@@ -248,9 +252,9 @@ class Peer {
         System.out.println(equalsLine);
 	    System.out.print("Name of file to get: ");
 	    String name = scanner.next();
-	    System.out.print("\nAddress of source peer: ");
+	    System.out.print("Address of source peer: ");
 	    String address = scanner.next().trim();
-	    System.out.print("\nPort of source peer: ");
+	    System.out.print("Port of source peer: ");
 
 	    int port = scanner.nextInt();
 	    try {
@@ -264,6 +268,8 @@ class Peer {
             in.close();
             out.close();
             if (!reply.equals("fileNotFound")) {
+                System.out.println("Contents of the received file between " +
+                        "dashes:");
                 System.out.println(dashedLine);
                 writeFile(name, reply.substring(10));
                 System.out.println(dashedLine);
@@ -271,6 +277,7 @@ class Peer {
             } else {
                 System.out.println("The file '" + name + "' is not available " +
                         "at " + address + ":" + port);
+                System.out.println(equalsLine);
             }
         } catch (IOException e) {
             System.out.println(e.getStackTrace().toString());
@@ -282,7 +289,7 @@ class Peer {
        name and contents are given as arguments.
      */
     void writeFile(String fileName, String contents) {
-        System.out.println(fileName +":\n" + contents);
+        System.out.println(fileName +":\n " + contents);
         FileOutputStream outputStream;
         File file;
         try {
@@ -399,12 +406,17 @@ class Peer {
 	   String[] message;
 	   message = request.split("\\s");
 	   String key = message[0];
+	   Neighbor neighbor;
 	   switch(key) {
            case "join":
-                Neighbor neighbor = new Neighbor(message[1], Integer.parseInt
+                neighbor = new Neighbor(message[1], Integer.parseInt
                         (message[2].trim()));
                 neighbors.add(neighbor);
+                break;
            case "leave":
+               neighbor = new Neighbor(message[1], Integer.parseInt
+                       (message[2].trim()));
+               neighbors.remove(neighbor);
                break;
            case "lookup":
                String lookup = request.substring(7);
@@ -412,6 +424,11 @@ class Peer {
                processLookup(token);
                break;
            case "file":
+               neighbor = new Neighbor(message[4], Integer.parseInt
+                       (message[5].trim()));
+               if (!neighbors.contains(neighbor)) {
+                   neighbors.add(neighbor);
+               }
                break;
        }
 
@@ -476,7 +493,7 @@ class Peer {
                 }
             }
             else {
-                System.out.println("File is NOT available at this peer");
+                GUI.displayLU("    File is NOT available at this peer");
                 String lookup = "lookup " + fileName + " " + id +
                         " " + ip + " " + lPort + " " + sourceIP + " " +
                         sourcePort;
@@ -487,14 +504,13 @@ class Peer {
                     )) {
                         int port = neighbors.get(i).port;
                         String address = neighbors.get(i).ip;
-                        System.out.println("    Forward request to " +
+                        GUI.displayLU("    Forward request to " +
                                 address + ":" + port);
                         try {
                             InetAddress addr = InetAddress.getByName(address);
                             DatagramPacket packet = new DatagramPacket(buf,
                                     buf.length, addr, port);
                             socket.send(packet);
-                            GUI.displayLU("Sent:    " + lookup);
                         } catch (IOException e) {
                             System.out.println(e.toString());
                         }
@@ -504,7 +520,7 @@ class Peer {
             }
         }
         else {
-            System.out.println("    Saw request before: no forwarding");
+            GUI.displayLU("    Saw request before: no forwarding");
         }
 
 	}// processLookup method
@@ -552,7 +568,7 @@ class Peer {
 	   message.
 	 */
 	void process(String request) { 
-        System.out.println("Received: " + request);
+        GUI.displayFT("Received: " + request);
 	    String fileName = request.split("\\s")[1];
 
         File folder = new File(filesPath);
@@ -568,11 +584,11 @@ class Peer {
                 byte[] buf = readFile(file);
                 reply = "fileFound " + new String(buf, "UTF-8");
                 out.writeUTF(reply);
-                System.out.println("    Sent back file contents");
+                GUI.displayFT("    Sent back file contents");
             } else {
                 reply = "fileNotFound";
                 out.writeUTF(reply);
-                System.out.println("    responded: fileNotFound");
+                GUI.displayFT("    responded: fileNotFound");
             }
         } catch (IOException e) {
             System.out.println(e.toString());
@@ -590,6 +606,7 @@ class Peer {
 	        fin = new FileInputStream(file);
 	        fin.read(contents);
 	        fin.close();
+	        GUI.displayFT("    Read file " + file.getPath());
         } catch (IOException e) {
 	        System.out.println(e.toString());
         }
