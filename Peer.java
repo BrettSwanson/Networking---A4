@@ -143,14 +143,14 @@ class Peer {
         String leaving = "leave " + ip + " " +
                 lPort;
         try {
-        DatagramSocket socket = new DatagramSocket(lPort);
+        DatagramSocket socket = new DatagramSocket();
             for (int i = 0; i < neighbors.size(); i++) {
                     int port = neighbors.get(i).port;
                     String addr = neighbors.get(i).ip;
                     byte[] buf = leaving.getBytes();
                     DatagramPacket packet;
-                    InetAddress address = InetAddress.getByAddress(
-                            addr.getBytes());
+                    InetAddress address = InetAddress.getByName(
+                            addr);
                     packet = new DatagramPacket(buf, buf.length, address,
                             port);
                     socket.send(packet);
@@ -380,10 +380,15 @@ class Peer {
                 packet = new DatagramPacket(buf, buf.length, addr, port);
                 socket.send(packet);
                 }
-                while (true) {
+                while (!stop) {
                     buf = new byte[256];
                     packet = new DatagramPacket(buf, buf.length);
+
                     socket.receive(packet);
+                    if (stop) {
+                        socket.disconnect();
+                    }
+
                     String request = new String(packet.getData(), "UTF-8");
                     GUI.displayLU("Received:    " + request);
                     process(request);
@@ -558,7 +563,6 @@ class Peer {
             System.out.println(e.toString());
         }
 	}// run method
-	
 	/* Process the given request received by the TCP client
 	   socket.  This request must be a "get" message (the only
 	   command that uses the TCP sockets). If the requested
