@@ -2,19 +2,19 @@
  *
  *  @version CS 391 - Spring 2018 - A4
  *
- *  @author FIRST STUDENT'S FULL NAME GOES HERE
+ *  @author Brett Swanson
  *
- *  @author 2nd STUDENT'S FULL NAME GOES HERE (DELETE THIS LINE IF NOT NEEDED)
+ *  @author Trevor Nipko
  * 
- *  @bug The initial join of a new peer [does/does not] work fully. [pick one]
+ *  @bug The initial join of a new peer does work fully. [pick one]
  *
- *  @bug The Status command [does/does not] work fully. [pick one]
+ *  @bug The Status command does work fully. [pick one]
  *
- *  @bug The Find command [does/does not] work fully. [pick one]
+ *  @bug The Find command does work fully. [pick one]
  *
- *  @bug The Get command [does/does not] work fully. [pick one]
+ *  @bug The Get command does work fully. [pick one]
  * 
- *  @bug The Quit command [does/does not] work fully. [pick one]
+ *  @bug The Quit command does work fully. [pick one]
  * 
  **/
 
@@ -133,6 +133,8 @@ class Peer {
             }
         }
 
+        System.exit(0);
+
 
     }// run method
 
@@ -160,6 +162,7 @@ class Peer {
                 System.out.println(e.toString());
         }
         lThread.terminate();
+        ftThread.close();
 
     }// processQuitRequest method
 
@@ -280,7 +283,7 @@ class Peer {
                 System.out.println(equalsLine);
             }
         } catch (IOException e) {
-            System.out.println(e.getStackTrace().toString());
+            System.out.println(e.toString());
         }
 
     }// processGetRequest method
@@ -380,21 +383,18 @@ class Peer {
                 packet = new DatagramPacket(buf, buf.length, addr, port);
                 socket.send(packet);
                 }
-                while (!stop) {
-                    buf = new byte[256];
-                    packet = new DatagramPacket(buf, buf.length);
+                while (socket.isBound()) {
+                        buf = new byte[256];
+                        packet = new DatagramPacket(buf, buf.length);
 
-                    socket.receive(packet);
-                    if (stop) {
-                        socket.disconnect();
-                    }
-
-                    String request = new String(packet.getData(), "UTF-8");
-                    GUI.displayLU("Received:    " + request);
-                    process(request);
+                        socket.receive(packet);
+                        String request = new String(packet.getData(), "UTF-8");
+                        GUI.displayLU("Received:    " + request);
+                        process(request);
                 }
 
         } catch (IOException e) {
+	        if (!(e instanceof SocketException))
             System.out.println(e.toString());
         }
 
@@ -560,7 +560,9 @@ class Peer {
 
 
         } catch (IOException e) {
-            System.out.println(e.toString());
+            if (!(e instanceof SocketException)) {
+                System.out.println(e.toString());
+            }
         }
 	}// run method
 	/* Process the given request received by the TCP client
@@ -635,6 +637,7 @@ class Peer {
             if (in != null)           { in.close();          }
             if (out != null)          { out.close();         }
             if (clientSocket != null) { clientSocket.close();}
+            if (serverSocket != null) { serverSocket.close();}
         } catch(IOException e) {
             System.err.println("Error in close(): " +
                     e.getMessage());
